@@ -21,7 +21,7 @@
       justify-content: center;
       min-height: 100vh;
       padding: 20px;
-      overflow-x: hidden; /* Prevent horizontal overflow */
+      overflow-x: hidden;
     }
     .container {
       width: 100%;
@@ -90,9 +90,6 @@
       margin-bottom: 10px;
       font-size: 20px;
     }
-    .status-box p {
-      margin: 5px 0;
-    }
     .severity {
       display: inline-block;
       padding: 5px 10px;
@@ -112,7 +109,6 @@
       color: #ffffff;
       background-color: #4CAF50;
     }
-    /* Footer Styles */
     .footer {
       width: 100%;
       background-color: #1e1e1e;
@@ -165,20 +161,19 @@
   </div>
 
   <div class="iframe-container">
-    <iframe id="targetIframe" title="Target Website Preview"></iframe>
+    <iframe id="targetIframe" title="Target Website Preview" onload="handleIframeLoad()" onerror="handleIframeError()"></iframe>
   </div>
 
   <div class="result-container" id="resultContainer">
     <div class="status-box">
       <h3>Vulnerability Status</h3>
-      <p id="result">check for clickjacking vulnerability.</p>
+      <p id="result">Check for clickjacking vulnerability.</p>
       <p id="headersInfo"></p>
       <div id="statusLine" style="border-top: 2px solid #ffffff; margin-top: 10px;"></div>
     </div>
   </div>
 </div>
 
-<!-- Footer -->
 <div class="footer">
   <p>Developed by LocalHost.07 &copy; 2024</p>
   <div class="social-icons">
@@ -189,6 +184,16 @@
 </div>
 
 <script>
+  function handleIframeLoad() {
+    document.getElementById("result").innerHTML = `<p style="color: red;">Clickjacking Vulnerability Not Found!</p>`;
+    document.getElementById("headersInfo").innerHTML = `<p>The page could not load in an iframe, indicating it is protected.</p>`;
+  }
+
+  function handleIframeError() {
+    document.getElementById("result").innerHTML = `<p style="color: #4CAF50;">No Clickjacking Vulnerability Detected.</p>`;
+    document.getElementById("headersInfo").innerHTML = `<p>The page loaded in an iframe, indicating a potential clickjacking risk.</p>`;
+  }
+
   async function checkClickjacking() {
     const url = document.getElementById("targetUrl").value;
     const result = document.getElementById("result");
@@ -201,28 +206,19 @@
       const response = await fetch(url, { method: "HEAD", mode: "no-cors" });
       const headers = response.headers;
 
-      let missingHeaders = [];
       let severityInfo = "";
 
       const xFrameOptions = headers.get("x-frame-options");
       const contentSecurityPolicy = headers.get("content-security-policy");
 
       if (!xFrameOptions) {
-        missingHeaders.push("X-Frame-Options");
         severityInfo += `<p><span class="severity high">High</span> Missing X-Frame-Options header</p>`;
       }
       if (!contentSecurityPolicy) {
-        missingHeaders.push("Content-Security-Policy");
         severityInfo += `<p><span class="severity medium">Medium</span> Missing Content-Security-Policy header</p>`;
       }
 
-      if (missingHeaders.length > 0) {
-        result.innerHTML = `<p style="color: #ff9800;">Clickjacking Vulnerability Found!</p>`;
-        headersInfo.innerHTML = `<p>Missing Headers:</p> ${severityInfo}`;
-      } else {
-        result.innerHTML = `<p style="color: #4CAF50;">No Clickjacking Vulnerability Detected.</p>`;
-        headersInfo.innerHTML = "";
-      }
+      headersInfo.innerHTML = severityInfo || "<p>All necessary headers are present.</p>";
     } catch (error) {
       result.innerHTML = "<p style='color: yellow;'>Error fetching headers. The site may not support CORS for header requests.</p>";
       headersInfo.innerHTML = `<p>Error details: ${error.message}</p>`;
@@ -231,4 +227,4 @@
 </script>
 
 </body>
-</html>
+  </html>
